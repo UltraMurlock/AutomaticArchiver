@@ -20,12 +20,13 @@ namespace AutomaticArchiver
                     try
                     {
                         Settings = JsonSerializer.Deserialize<Settings>(stream);
+                        Console.WriteLine("Файл конфигурации загружен");
                     }
                     catch(Exception exception)
                     {
                         ConsoleExtension.WriteError($"Ошибка при загрузке файла конфигурации \"config.cfg\"");
                         ConsoleExtension.WriteError($"Сообщение: {exception.Message}");
-                        ConsoleExtension.WriteWarning($"Будут использованы настройки по умолчанию");
+                        ConsoleExtension.WriteWarning($"Использована конфигурация по умолчанию");
 
                         Settings = Settings.Default;
                     }
@@ -66,9 +67,21 @@ namespace AutomaticArchiver
             string targetFile = task.ArchieveDirectory + name + '_' + DateTime.Now.Date.ToString("dd_MM_yyyy").Replace('/', '_') + ".zip";
 
             if(File.Exists(targetFile))
+            {
+                Console.WriteLine($"Файл {targetFile} уже существует. Задача архивации пропущена");
                 return;
+            }
 
-            ZipFile.CreateFromDirectory(task.SourceDirectory, targetFile, CompressionLevel.SmallestSize, false);
+            try
+            {
+                ZipFile.CreateFromDirectory(task.SourceDirectory, targetFile, CompressionLevel.SmallestSize, false);
+                Console.WriteLine($"Папка {task.SourceDirectory} успешно помещена в {targetFile}");
+            }
+            catch (Exception exception)
+            {
+                ConsoleExtension.WriteError($"Ошибка архивирования: {exception.GetType().ToString()}");
+                ConsoleExtension.WriteError($"\tСообщение: {exception.Message}");
+            }
         }
     }
 }
