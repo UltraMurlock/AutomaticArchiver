@@ -1,17 +1,17 @@
 ﻿namespace AutomaticArchiver
 {
-    public class Settings
+    public class TaskList
     {
         public ArchieveDirectoryTask[] ArchieveDirectoryTasks { get; set; } = new ArchieveDirectoryTask[0];
         public ArchieveFileTask[] ArchieveFileTasks { get; set; } = new ArchieveFileTask[0];
 
 
 
-        public static Settings Default
+        public static TaskList Default
         {
             get
             {
-                Settings settings = new Settings();
+                TaskList settings = new TaskList();
                 settings.ArchieveDirectoryTasks = new ArchieveDirectoryTask[1];
                 settings.ArchieveDirectoryTasks[0] = new ArchieveDirectoryTask();
 
