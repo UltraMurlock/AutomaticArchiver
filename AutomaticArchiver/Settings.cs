@@ -2,7 +2,8 @@
 {
     public class Settings
     {
-        public ArchieveTask[] ArchieveTasks { get; set; } = new ArchieveTask[0];
+        public ArchieveDirectoryTask[] ArchieveDirectoryTasks { get; set; } = new ArchieveDirectoryTask[0];
+        public ArchieveFileTask[] ArchieveFileTasks { get; set; } = new ArchieveFileTask[0];
 
 
 
@@ -11,8 +12,11 @@
             get
             {
                 Settings settings = new Settings();
-                settings.ArchieveTasks = new ArchieveTask[1];
-                settings.ArchieveTasks[0] = new ArchieveTask();
+                settings.ArchieveDirectoryTasks = new ArchieveDirectoryTask[1];
+                settings.ArchieveDirectoryTasks[0] = new ArchieveDirectoryTask();
+
+                settings.ArchieveFileTasks = new ArchieveFileTask[1];
+                settings.ArchieveFileTasks[0] = new ArchieveFileTask();
                 return settings;
             }
         }
