@@ -2,7 +2,7 @@
 {
     public static class Cleaner
     {
-        public static void CleanUp(string directoryPath, string baseFileName)
+        public static int CleanUp(string directoryPath, string baseFileName)
         {
             string[] files = Directory.GetFiles(directoryPath, $"{baseFileName}_*_*_*.zip");
 
@@ -21,6 +21,7 @@
                 filesByDate.Add(date, file);
             }
 
+            int deletedNumber = 0;
             foreach(DateTime month in filesInMonth.Keys)
             {
                 if(month == DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1))
@@ -42,11 +43,14 @@
                     {
                         string fileToDelete = filesByDate[date];
                         File.Delete(fileToDelete);
+                        deletedNumber++;
 
                         filesByDate.Remove(date);
                     }
                 }
             }
+
+            return deletedNumber;
         }
 
         

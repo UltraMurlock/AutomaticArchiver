@@ -26,13 +26,13 @@ namespace AutomaticArchiver
                     try
                     {
                         TaskList = JsonSerializer.Deserialize<TaskList>(stream);
-                        Console.WriteLine("Файл конфигурации загружен");
+                        Console.WriteLine("Файл конфигурации загружен\n");
                     }
                     catch(Exception exception)
                     {
-                        ConsoleExtension.WriteError($"Ошибка при загрузке файла конфигурации \"config.cfg\"");
-                        ConsoleExtension.WriteError($"Сообщение: {exception.Message}");
-                        ConsoleExtension.WriteWarning($"Использована конфигурация по умолчанию");
+                        ConsoleExtension.WriteError($"Ошибка при загрузке файла конфигурации \"config.cfg\"" +
+                            $"Сообщение: {exception.Message}" +
+                            $"Будет использована конфигурация по умолчанию\n", true);
 
                         TaskList = TaskList.Default;
                     }
@@ -91,9 +91,9 @@ namespace AutomaticArchiver
                     }
                     catch(Exception exception)
                     {
-                        ConsoleExtension.WriteError($"Ошибка при загрузке файла настроек {AppDataPath}");
-                        ConsoleExtension.WriteError($"Сообщение: {exception.Message}");
-                        ConsoleExtension.WriteWarning($"Использованы настройки по умолчанию");
+                        ConsoleExtension.WriteError($"Ошибка при загрузке файла данных программы {AppDataPath}" +
+                            $"\nСообщение: {exception.Message}" +
+                            $"\nБудут использованы данные по умолчанию", true);
 
                         AppData = AppData.Default;
                     }
@@ -126,26 +126,37 @@ namespace AutomaticArchiver
             string[] splittedPath = task.SourceDirectory.Split('\\');
             string name = splittedPath[splittedPath.Length - 1];
 
-            if(cleanup)
-                Cleaner.CleanUp(task.ArchieveDirectory, name);
-
             string targetFile = task.ArchieveDirectory + name + '_' + DateTime.Now.Date.ToString("dd_MM_yyyy").Replace('/', '_') + ".zip";
+
+            if(task.IncludeSourceDirectory)
+                Console.WriteLine($"Архивация {task.SourceDirectory} в {targetFile}");
+            else
+                Console.WriteLine($"Архивация из {task.SourceDirectory} в {targetFile}");
+
             if(File.Exists(targetFile))
             {
-                Console.WriteLine($"Файл {targetFile} уже существует. Задача архивации пропущена");
-                return;
+                Console.WriteLine($"Файл {targetFile} уже существует\nЗадача архивации пропущена");
+            }
+            else
+            {
+                try
+                {
+                    ZipFile.CreateFromDirectory(task.SourceDirectory, targetFile, CompressionLevel.SmallestSize, task.IncludeSourceDirectory);
+                }
+                catch(Exception exception)
+                {
+                    ConsoleExtension.WriteError($"Ошибка архивирования: {exception.GetType().ToString()}\n\tСообщение: {exception.Message}", true);
+                    return;
+                }
             }
 
-            try
+            if(cleanup)
             {
-                ZipFile.CreateFromDirectory(task.SourceDirectory, targetFile, CompressionLevel.SmallestSize, task.IncludeSourceDirectory);
-                Console.WriteLine($"Папка {task.SourceDirectory} успешно помещена в {targetFile}");
+                int deletedNumber = Cleaner.CleanUp(task.ArchieveDirectory, name);
+                Console.WriteLine($"Очистка. Удалено файлов: {deletedNumber}");
             }
-            catch (Exception exception)
-            {
-                ConsoleExtension.WriteError($"Ошибка архивирования: {exception.GetType().ToString()}");
-                ConsoleExtension.WriteError($"\tСообщение: {exception.Message}");
-            }
+
+            Console.WriteLine();
         }
 
         private static void ArhieveFile(ArchieveFileTask task, bool cleanup)
@@ -155,38 +166,47 @@ namespace AutomaticArchiver
 
             task.SourceFile = task.SourceFile.Replace('/', '\\');
             if(task.SourceFile.EndsWith('\\'))
-                ConsoleExtension.WriteError("Некорректный синтаксис пути к файлу");
+            {
+                ConsoleExtension.WriteError($"Некорректный синтаксис пути к файлу \"{task.SourceFile}\"", true);
+                return;
+            }
 
             string[] splittedPath = task.SourceFile.Split('\\');
             string name = splittedPath[splittedPath.Length - 1];
 
-            if(cleanup)
-                Cleaner.CleanUp(task.ArchieveDirectory, name);
-
             string targetFile = task.ArchieveDirectory + name + '_' + DateTime.Now.Date.ToString("dd_MM_yyyy").Replace('/', '_') + ".zip";
+            Console.WriteLine($"Архивация {task.SourceFile} в {targetFile}");
+
             if(File.Exists(targetFile))
             {
-                Console.WriteLine($"Файл {targetFile} уже существует. Задача архивации пропущена");
-                return;
+                Console.WriteLine($"Файл {targetFile} уже существует\nЗадача архивации пропущена");
             }
-
-            try
+            else
             {
-                using(var stream = new FileStream(targetFile, FileMode.OpenOrCreate))
+                try
                 {
-                    using(ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Create))
+                    using(var stream = new FileStream(targetFile, FileMode.OpenOrCreate))
                     {
-                        zip.CreateEntryFromFile(task.SourceFile, splittedPath[splittedPath.Length - 1]);
+                        using(ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Create))
+                        {
+                            zip.CreateEntryFromFile(task.SourceFile, splittedPath[splittedPath.Length - 1]);
+                        }
                     }
                 }
+                catch(Exception exception)
+                {
+                    ConsoleExtension.WriteError($"Ошибка архивации: {exception.GetType().ToString()}\n\tСообщение: {exception.Message}\n", true);
+                    return;
+                }
+            }
 
-                Console.WriteLine($"Файл {task.SourceFile} успешно помещён в {targetFile}");
-            }
-            catch(Exception exception)
+            if(cleanup)
             {
-                ConsoleExtension.WriteError($"Ошибка архивирования: {exception.GetType().ToString()}");
-                ConsoleExtension.WriteError($"\tСообщение: {exception.Message}");
+                int deletedNumber = Cleaner.CleanUp(task.ArchieveDirectory, name);
+                Console.WriteLine($"Очистка. Удалено файлов: {deletedNumber}");
             }
+
+            Console.WriteLine();
         }
     }
 }
