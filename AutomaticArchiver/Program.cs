@@ -21,6 +21,8 @@ namespace AutomaticArchiver
 
         static void Main(string[] args)
         {
+            Logger = new FileLogger(LogPath);
+
             SerializerOptions = new JsonSerializerOptions {
                 WriteIndented = true
             };
