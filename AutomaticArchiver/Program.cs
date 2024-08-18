@@ -1,212 +1,85 @@
-﻿using System.IO.Compression;
-using System.Text.Json;
+﻿using System.Text.Json;
+using AutomaticArchiver.Archives;
+using AutomaticArchiver.Tasks;
 
 namespace AutomaticArchiver
 {
     internal class Program
     {
         public const string TaskListPath = ".\\tasklist.json";
-        public const string AppDataPath = ".\\app-data.json";
+        public const string TemplateTaskListPath = ".\\tasklist-template.json";
 
         public static TaskList? TaskList;
-        public static AppData? AppData;
 
-        public static JsonSerializerOptions? AppDataSerializerOptions;
+        public static JsonSerializerOptions? SerializerOptions;
 
 
 
         static void Main(string[] args)
         {
-            LoadAppData();
-
-            if(File.Exists(TaskListPath))
-            {
-                using(FileStream stream = new FileStream(TaskListPath, FileMode.Open))
-                {
-                    try
-                    {
-                        TaskList = JsonSerializer.Deserialize<TaskList>(stream);
-                        Console.WriteLine("Файл конфигурации загружен\n");
-                    }
-                    catch(Exception exception)
-                    {
-                        ConsoleExtension.WriteError($"Ошибка при загрузке файла конфигурации \"config.cfg\"" +
-                            $"Сообщение: {exception.Message}" +
-                            $"Будет использована конфигурация по умолчанию\n", true);
-
-                        TaskList = TaskList.Default;
-                    }
-                }
-            }
-            else
-            {
-                TaskList = TaskList.Default;
-
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-
-                using(FileStream stream = new FileStream(TaskListPath, FileMode.CreateNew))
-                    JsonSerializer.Serialize(stream, TaskList, options);
-            }
-
-
-            if(TaskList != null)
-            {
-                bool cleanup = false;
-                DateTime lastCleanMonth = AppData.LastCleaningUp.Date.AddDays(-AppData.LastCleaningUp.Date.Day + 1);
-                if(lastCleanMonth != DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1))
-                    cleanup = true;
-
-                foreach(var task in TaskList.ArchieveDirectoryTasks)
-                    ArhieveDirectory(task, cleanup);
-
-                foreach(var task in TaskList.ArchieveFileTasks)
-                    ArhieveFile(task, cleanup);
-
-                if(cleanup)
-                {
-                    AppData.LastCleaningUp = DateTime.Now.Date;
-                    SaveAppData();
-                }
-            }
-        }
-
-
-
-        private static void LoadAppData()
-        {
-            AppDataSerializerOptions = new JsonSerializerOptions {
+            SerializerOptions = new JsonSerializerOptions {
                 WriteIndented = true
             };
 
-            if(File.Exists(AppDataPath))
-            {
-                using(FileStream stream = new FileStream(AppDataPath, FileMode.Open))
-                {
-                    try
-                    {
-                        AppData = JsonSerializer.Deserialize<AppData>(stream);
-                    }
-                    catch(Exception exception)
-                    {
-                        ConsoleExtension.WriteError($"Ошибка при загрузке файла данных программы {AppDataPath}" +
-                            $"\nСообщение: {exception.Message}" +
-                            $"\nБудут использованы данные по умолчанию", true);
+            using(FileStream stream = new FileStream(TemplateTaskListPath, FileMode.Create, FileAccess.Write))
+                JsonSerializer.Serialize(stream, TaskList.Template, SerializerOptions);
 
-                        AppData = AppData.Default;
-                    }
-                }
-            }
-            else
-            {
-                AppData = AppData.Default;
-                SaveAppData();
-            }
-        }
+            TaskList = LoadTaskList(TaskListPath);
 
-        private static void SaveAppData()
-        {
-            using(FileStream stream = new FileStream(AppDataPath, FileMode.Create))
-                JsonSerializer.Serialize(stream, AppData, AppDataSerializerOptions);
+
+
+            foreach(var task in TaskList.GetTasks())
+                PerformTask(task);
         }
 
 
 
-        private static void ArhieveDirectory(ArchieveDirectoryTask task, bool cleanup)
+        private static TaskList LoadTaskList(string path)
         {
-            if(task.SourceDirectory == null || task.ArchieveDirectory == null)
-                return;
-
-            task.SourceDirectory = task.SourceDirectory.Replace('/', '\\');
-            if(task.SourceDirectory.EndsWith('\\'))
-                task.SourceDirectory = task.SourceDirectory.Remove(task.SourceDirectory.Length - 1);
-
-            string[] splittedPath = task.SourceDirectory.Split('\\');
-            string name = splittedPath[splittedPath.Length - 1];
-
-            string targetFile = task.ArchieveDirectory + name + '_' + DateTime.Now.Date.ToString("dd_MM_yyyy").Replace('/', '_') + ".zip";
-
-            if(task.IncludeSourceDirectory)
-                Console.WriteLine($"Архивация {task.SourceDirectory} в {targetFile}");
-            else
-                Console.WriteLine($"Архивация из {task.SourceDirectory} в {targetFile}");
-
-            if(File.Exists(targetFile))
-            {
-                Console.WriteLine($"Файл {targetFile} уже существует\nЗадача архивации пропущена");
-            }
-            else
+            if(File.Exists(TaskListPath))
             {
                 try
                 {
-                    ZipFile.CreateFromDirectory(task.SourceDirectory, targetFile, CompressionLevel.SmallestSize, task.IncludeSourceDirectory);
+                    TaskList? taskList = null;
+                    using(FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                        taskList = JsonSerializer.Deserialize<TaskList>(stream);
+
+                    if(taskList == null)
+                        throw new JsonException("Deserialized file is null");
+
+                    return taskList;
                 }
-                catch(Exception exception)
+                catch(Exception ex)
                 {
-                    ConsoleExtension.WriteError($"Ошибка архивирования: {exception.GetType().ToString()}\n\tСообщение: {exception.Message}", true);
-                    return;
+                    string errorText = $"Ошибка при загрузке файла с задачами {Path.GetFullPath(path)}";
+                    ConsoleExtension.WriteException(errorText, ex, true);
+                    return new TaskList();
                 }
-            }
-
-            if(cleanup)
-            {
-                int deletedNumber = Cleaner.CleanUp(task.ArchieveDirectory, name);
-                Console.WriteLine($"Очистка. Удалено файлов: {deletedNumber}");
-            }
-
-            Console.WriteLine();
-        }
-
-        private static void ArhieveFile(ArchieveFileTask task, bool cleanup)
-        {
-            if(task.SourceFile == null || task.ArchieveDirectory == null)
-                return;
-
-            task.SourceFile = task.SourceFile.Replace('/', '\\');
-            if(task.SourceFile.EndsWith('\\'))
-            {
-                ConsoleExtension.WriteError($"Некорректный синтаксис пути к файлу \"{task.SourceFile}\"", true);
-                return;
-            }
-
-            string[] splittedPath = task.SourceFile.Split('\\');
-            string name = splittedPath[splittedPath.Length - 1];
-
-            string targetFile = task.ArchieveDirectory + name + '_' + DateTime.Now.Date.ToString("dd_MM_yyyy").Replace('/', '_') + ".zip";
-            Console.WriteLine($"Архивация {task.SourceFile} в {targetFile}");
-
-            if(File.Exists(targetFile))
-            {
-                Console.WriteLine($"Файл {targetFile} уже существует\nЗадача архивации пропущена");
             }
             else
             {
-                try
-                {
-                    using(var stream = new FileStream(targetFile, FileMode.OpenOrCreate))
-                    {
-                        using(ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Create))
-                        {
-                            zip.CreateEntryFromFile(task.SourceFile, splittedPath[splittedPath.Length - 1]);
-                        }
-                    }
-                }
-                catch(Exception exception)
-                {
-                    ConsoleExtension.WriteError($"Ошибка архивации: {exception.GetType().ToString()}\n\tСообщение: {exception.Message}\n", true);
-                    return;
-                }
+                TaskList taskList = new TaskList();
+                using(FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+                    JsonSerializer.Serialize(stream, taskList, SerializerOptions);
+                return taskList;
             }
+        }
 
-            if(cleanup)
+        private static void PerformTask(ArchiveTask task)
+        {
+            try
             {
-                int deletedNumber = Cleaner.CleanUp(task.ArchieveDirectory, name);
-                Console.WriteLine($"Очистка. Удалено файлов: {deletedNumber}");
+                Archiver.Archive(task);
             }
+            catch(Exception ex)
+            {
+                string source = task.SourceDirectory;
+                if(task is ArchiveFileTask fileTask)
+                    source += '\\' + fileTask.SourceFileName;
 
-            Console.WriteLine();
+                string errorMessage = $"Ошибка при архивации {source}";
+                ConsoleExtension.WriteException(errorMessage, ex, true);
+            }
         }
     }
 }

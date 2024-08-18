@@ -1,24 +1,42 @@
-﻿namespace AutomaticArchiver
+﻿using AutomaticArchiver.Tasks;
+
+namespace AutomaticArchiver
 {
+    [Serializable]
     public class TaskList
     {
-        public ArchieveDirectoryTask[] ArchieveDirectoryTasks { get; set; } = new ArchieveDirectoryTask[0];
-        public ArchieveFileTask[] ArchieveFileTasks { get; set; } = new ArchieveFileTask[0];
+        public ArchiveDirectoryTask[] DirectoryTasks { get; set; }
+        public ArchiveFileTask[] FileTasks { get; set; }
 
 
 
-        public static TaskList Default
+        public TaskList()
+        {
+            DirectoryTasks = new ArchiveDirectoryTask[0];
+            FileTasks = new ArchiveFileTask[0];
+        }
+
+
+
+        public static TaskList Template
         {
             get
             {
-                TaskList settings = new TaskList();
-                settings.ArchieveDirectoryTasks = new ArchieveDirectoryTask[1];
-                settings.ArchieveDirectoryTasks[0] = new ArchieveDirectoryTask();
-
-                settings.ArchieveFileTasks = new ArchieveFileTask[1];
-                settings.ArchieveFileTasks[0] = new ArchieveFileTask();
-                return settings;
+                TaskList template = new TaskList();
+                template.DirectoryTasks = new ArchiveDirectoryTask[1] { ArchiveDirectoryTask.Template };
+                template.FileTasks = new ArchiveFileTask[1] { ArchiveFileTask.Template };
+                return template;
             }
+        }
+
+
+
+        public ArchiveTask[] GetTasks()
+        {
+            ArchiveTask[] tasks = new ArchiveTask[DirectoryTasks.Length + FileTasks.Length];
+            DirectoryTasks.CopyTo(tasks, 0);
+            FileTasks.CopyTo(tasks, DirectoryTasks.Length);
+            return tasks;
         }
     }
 }

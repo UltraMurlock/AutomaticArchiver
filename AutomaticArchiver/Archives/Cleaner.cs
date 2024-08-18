@@ -1,20 +1,20 @@
-﻿namespace AutomaticArchiver
+﻿namespace AutomaticArchiver.Archives
 {
     public static class Cleaner
     {
-        public static int CleanUp(string directoryPath, string baseFileName)
+        public static int CleanUp(DirectoryInfo targetDirectory, string targetName)
         {
-            string[] files = Directory.GetFiles(directoryPath, $"{baseFileName}_*_*_*.zip");
+            FileInfo[] files = targetDirectory.GetFiles($"{targetName}_*_*_*.zip");
 
             Dictionary<DateTime, List<DateTime>> filesInMonth = new Dictionary<DateTime, List<DateTime>>();
-            Dictionary<DateTime, string> filesByDate = new Dictionary<DateTime, string>();
-            foreach(string file in files)
+            Dictionary<DateTime, FileInfo> filesByDate = new Dictionary<DateTime, FileInfo>();
+            foreach (FileInfo file in files)
             {
                 DateTime date = GetDateFromName(file);
                 DateTime month = date;
                 month = month.AddDays(-month.Day + 1);
 
-                if(!filesInMonth.ContainsKey(month))
+                if (!filesInMonth.ContainsKey(month))
                     filesInMonth.Add(month, new List<DateTime>());
 
                 filesInMonth[month].Add(date);
@@ -22,27 +22,26 @@
             }
 
             int deletedNumber = 0;
-            foreach(DateTime month in filesInMonth.Keys)
+            foreach (DateTime month in filesInMonth.Keys)
             {
-                if(month == DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1))
+                if (month == DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1))
                     continue;
-                if(filesInMonth[month].Count <= 1)
+                if (filesInMonth[month].Count <= 1)
                     continue;
 
                 DateTime lastDate = DateTime.MinValue;
-                foreach(DateTime date in filesInMonth[month])
+                foreach (DateTime date in filesInMonth[month])
                 {
-                    if(date > lastDate)
+                    if (date > lastDate)
                         lastDate = date;
                 }
 
-                for(int i = filesInMonth[month].Count - 1; i >= 0; i--)
+                for (int i = filesInMonth[month].Count - 1; i >= 0; i--)
                 {
                     DateTime date = filesInMonth[month][i];
-                    if(date != lastDate)
+                    if (date != lastDate)
                     {
-                        string fileToDelete = filesByDate[date];
-                        File.Delete(fileToDelete);
+                        filesByDate[date].Delete();
                         deletedNumber++;
 
                         filesByDate.Remove(date);
@@ -53,14 +52,13 @@
             return deletedNumber;
         }
 
-        
 
-        private static DateTime GetDateFromName(string path)
+
+        private static DateTime GetDateFromName(FileInfo file)
         {
-            int lastDot = path.LastIndexOf('.');
-            path = path.Remove(lastDot);
+            string name = Path.GetFileNameWithoutExtension(file.Name);
 
-            string[] splittedPath = path.Split('_');
+            string[] splittedPath = name.Split('_');
             int year = int.Parse(splittedPath[splittedPath.Length - 1]);
             int month = int.Parse(splittedPath[splittedPath.Length - 2]);
             int day = int.Parse(splittedPath[splittedPath.Length - 3]);

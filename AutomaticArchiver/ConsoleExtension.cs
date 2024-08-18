@@ -2,6 +2,12 @@
 {
     public static class ConsoleExtension
     {
+        public static void WriteException(string text, Exception exception, bool waitUserBeforeContinue)
+        {
+            string errorMessage = $"{text}\n\t{exception.GetType().Name}:{exception.Message}";
+            WriteError(errorMessage, true);
+        }
+
         public static void WriteError(string text, bool waitUserBeforeContinue)
         {
             Console.ForegroundColor = ConsoleColor.Red;
