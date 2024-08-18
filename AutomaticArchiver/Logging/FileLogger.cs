@@ -48,7 +48,7 @@
 
         private void LogHeader()
         {
-            _writer.WriteLine($"Запуск {DateTime.Now.ToString("yyyy.MM.dd hh:mm:ss")}");
+            _writer.WriteLine($"Запуск {DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss")}");
         }
 
 
