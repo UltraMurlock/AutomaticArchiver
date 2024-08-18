@@ -32,8 +32,6 @@ namespace AutomaticArchiver.Archives
             }
             archieve.Dispose();
             stream.Dispose();
-
-            Cleaner.CleanUp(targetDirectory, task.TargetName);
         }
 
 

@@ -79,12 +79,10 @@ namespace AutomaticArchiver
 
         private static void PerformTask(ArchiveTask task)
         {
-            Logger.LogMessage($"Архивация {task.TargetName}...");
-
+            Logger.LogMessage($"Архивация {task.TargetName} в {task.TargetDirectory}...");
             try
             {
                 Archiver.Archive(task);
-                Logger.LogMessage($"Успешно\n");
             }
             catch(Exception ex)
             {
@@ -95,6 +93,12 @@ namespace AutomaticArchiver
                 string errorMessage = $"Ошибка архивации {source}\n";
                 Logger.LogError(errorMessage, ex, "\n");
             }
+
+            Logger.LogMessage($"Очистка старых архивов...");
+            DirectoryInfo directory = new DirectoryInfo(task.TargetDirectory);
+            Cleaner.CleanUp(directory, task.TargetName);
+
+            Logger.LogMessage($"Успешно\n");
         }
     }
 }
