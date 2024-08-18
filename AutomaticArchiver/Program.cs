@@ -27,8 +27,11 @@ namespace AutomaticArchiver
                 WriteIndented = true
             };
 
-            using(FileStream stream = new FileStream(TemplateTaskListPath, FileMode.Create, FileAccess.Write))
-                JsonSerializer.Serialize(stream, TaskList.Template, SerializerOptions);
+            if(!File.Exists(TemplateTaskListPath))
+            {
+                using(FileStream stream = new FileStream(TemplateTaskListPath, FileMode.Create, FileAccess.Write))
+                    JsonSerializer.Serialize(stream, TaskList.Template, SerializerOptions);
+            }
 
             TaskList = LoadTaskList(TaskListPath);
 
