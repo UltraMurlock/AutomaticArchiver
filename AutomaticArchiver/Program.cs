@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using AutomaticArchiver.Archives;
+using AutomaticArchiver.Logging;
 using AutomaticArchiver.Tasks;
 
 namespace AutomaticArchiver
@@ -9,9 +10,12 @@ namespace AutomaticArchiver
         public const string TaskListPath = ".\\tasklist.json";
         public const string TemplateTaskListPath = ".\\tasklist-template.json";
 
-        public static TaskList? TaskList;
+        public const string LogPath = ".\\log.txt";
 
         public static JsonSerializerOptions? SerializerOptions;
+        public static TaskList? TaskList;
+
+        public static ILogger Logger = new ConsoleLogger();
 
 
 
@@ -30,6 +34,9 @@ namespace AutomaticArchiver
 
             foreach(var task in TaskList.GetTasks())
                 PerformTask(task);
+
+            Logger.LogMessage("Завершение программы");
+            (Logger as IDisposable)?.Dispose();
         }
 
 
@@ -51,8 +58,8 @@ namespace AutomaticArchiver
                 }
                 catch(Exception ex)
                 {
-                    string errorText = $"Ошибка при загрузке файла с задачами {Path.GetFullPath(path)}";
-                    ConsoleExtension.WriteException(errorText, ex, true);
+                    string errorText = $"Ошибка при загрузке файла с задачами {Path.GetFullPath(path)}\n";
+                    Logger.LogError(errorText, ex);
                     return new TaskList();
                 }
             }
@@ -67,9 +74,12 @@ namespace AutomaticArchiver
 
         private static void PerformTask(ArchiveTask task)
         {
+            Logger.LogMessage($"Архивация {task.TargetName}...");
+
             try
             {
                 Archiver.Archive(task);
+                Logger.LogMessage($"Успешно\n");
             }
             catch(Exception ex)
             {
@@ -77,8 +87,8 @@ namespace AutomaticArchiver
                 if(task is ArchiveFileTask fileTask)
                     source += '\\' + fileTask.SourceFileName;
 
-                string errorMessage = $"Ошибка при архивации {source}";
-                ConsoleExtension.WriteException(errorMessage, ex, true);
+                string errorMessage = $"Ошибка архивации {source}\n";
+                Logger.LogError(errorMessage, ex, "\n");
             }
         }
     }
