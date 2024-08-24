@@ -5,6 +5,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+    <SignAssembly>False</SignAssembly>
+    <Version>$(VersionPrefix)</Version>
+    <Authors>UltraMurlock</Authors>
+    <RepositoryUrl>https://github.com/UltraMurlock/AutomaticArchiver</RepositoryUrl>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <Copyright>$(Authors)</Copyright>
   </PropertyGroup>
 
 </Project>
