@@ -1,4 +1,4 @@
-﻿using AutomaticArchiver.Tasks;
+﻿using AutomaticArchivation.Tasks;
 
 namespace AutomaticArchiver
 {

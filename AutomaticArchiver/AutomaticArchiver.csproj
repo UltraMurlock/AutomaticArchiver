@@ -14,4 +14,8 @@
     <Copyright>$(Authors)</Copyright>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AutomaticArchivation\AutomaticArchivation.csproj" />
+  </ItemGroup>
+
 </Project>

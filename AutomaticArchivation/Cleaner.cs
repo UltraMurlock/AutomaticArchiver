@@ -1,4 +1,4 @@
-﻿namespace AutomaticArchiver.Archives
+﻿namespace AutomaticArchivation
 {
     public static class Cleaner
     {

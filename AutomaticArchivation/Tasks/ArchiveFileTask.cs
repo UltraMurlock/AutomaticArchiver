@@ -1,4 +1,4 @@
-﻿namespace AutomaticArchiver.Tasks
+﻿namespace AutomaticArchivation.Tasks
 {
     [Serializable]
     public class ArchiveFileTask : ArchiveTask

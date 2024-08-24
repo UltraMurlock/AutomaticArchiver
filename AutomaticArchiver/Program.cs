@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using AutomaticArchiver.Archives;
+using AutomaticArchivation;
+using AutomaticArchivation.Tasks;
 using AutomaticArchiver.Logging;
-using AutomaticArchiver.Tasks;
 
 namespace AutomaticArchiver
 {

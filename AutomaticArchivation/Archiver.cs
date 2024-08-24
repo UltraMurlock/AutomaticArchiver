@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
-using AutomaticArchiver.Tasks;
+using AutomaticArchivation.Tasks;
 
-namespace AutomaticArchiver.Archives
+namespace AutomaticArchivation
 {
     public static class Archiver
     {
