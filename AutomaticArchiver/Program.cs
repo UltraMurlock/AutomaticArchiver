@@ -10,10 +10,14 @@ namespace AutomaticArchiver
         public const string TaskListPath = ".\\tasklist.json";
         public const string TemplateTaskListPath = ".\\tasklist-template.json";
 
-        public const string LogPath = ".\\log.txt";
+        public const string IgnorePatternListPath = ".\\ignore-patterns.json";
+        public const string TemplateIgnorePatternListPath = ".\\ignore-patterns-template.json";
+
+		public const string LogPath = ".\\log.txt";
 
         public static JsonSerializerOptions? SerializerOptions;
         public static TaskList? TaskList;
+        public static IgnorePatternList? IgnorePatternList;
 
         public static ILogger Logger = new ConsoleLogger();
 
@@ -27,14 +31,20 @@ namespace AutomaticArchiver
                 WriteIndented = true
             };
 
-            if(!File.Exists(TemplateTaskListPath))
+			if(!File.Exists(TemplateIgnorePatternListPath))
+			{
+				using(FileStream stream = new FileStream(TemplateIgnorePatternListPath, FileMode.Create, FileAccess.Write))
+					JsonSerializer.Serialize(stream, IgnorePatternList.Template, SerializerOptions);
+			}
+
+			if(!File.Exists(TemplateTaskListPath))
             {
                 using(FileStream stream = new FileStream(TemplateTaskListPath, FileMode.Create, FileAccess.Write))
                     JsonSerializer.Serialize(stream, TaskList.Template, SerializerOptions);
             }
 
+            IgnorePatternList = LoadIgnorePatternList(IgnorePatternListPath);
             TaskList = LoadTaskList(TaskListPath);
-
 
 
             foreach(var task in TaskList.GetTasks())
@@ -48,7 +58,11 @@ namespace AutomaticArchiver
 
         private static TaskList LoadTaskList(string path)
         {
-            if(File.Exists(TaskListPath))
+#if DEBUG
+            if(IgnorePatternList == null)
+                throw new Exception("Список задач должен быть загружен после списка паттернов игнорирования");
+#endif
+            if(File.Exists(path))
             {
                 try
                 {
@@ -58,6 +72,16 @@ namespace AutomaticArchiver
 
                     if(taskList == null)
                         throw new JsonException("Deserialized file is null");
+
+                    foreach(var task in taskList.GetTasks())
+                    {
+                        if(string.IsNullOrEmpty(task.IgnorePattern))
+                            continue;
+
+                        if(!IgnorePatternList.TryGetPatternByName(task.IgnorePattern, out var pattern))
+                            throw new Exception($"Указанный в задаче паттерн игнорирования {task.IgnorePattern} " +
+                                $"не определён");
+                    }
 
                     return taskList;
                 }
@@ -77,12 +101,44 @@ namespace AutomaticArchiver
             }
         }
 
+        private static IgnorePatternList LoadIgnorePatternList(string path)
+		{
+			if(File.Exists(path))
+			{
+				try
+				{
+					IgnorePatternList? ignorePatternList = null;
+					using(FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+						ignorePatternList = JsonSerializer.Deserialize<IgnorePatternList>(stream);
+
+					if(ignorePatternList == null)
+						throw new JsonException("Deserialized file is null");
+
+					return ignorePatternList;
+				}
+				catch(Exception ex)
+				{
+					string errorText = $"Ошибка при загрузке файла с задачами {Path.GetFullPath(path)}\n";
+					Logger.LogError(errorText, ex);
+					return new IgnorePatternList();
+				}
+			}
+			else
+			{
+				IgnorePatternList ignorePatternList = new IgnorePatternList();
+				using(FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+					JsonSerializer.Serialize(stream, ignorePatternList, SerializerOptions);
+				return ignorePatternList;
+			}
+		}
+
         private static void PerformTask(ArchiveTask task)
         {
             Logger.LogMessage($"Архивация {task.TargetName} в {task.TargetDirectory}...");
             try
             {
-                Archiver.Archive(task);
+                IgnorePatternList!.TryGetPatternByName(task.IgnorePattern, out var ignorePattern);
+                Archiver.Archive(task, ignorePattern);
             }
             catch(Exception ex)
             {

@@ -6,6 +6,7 @@
         public string SourceDirectory { get; set; }
         public string TargetDirectory { get; set; }
         public string TargetName { get; set; }
+        public string IgnorePattern { get; set; }
 
 
 
@@ -14,6 +15,7 @@
             SourceDirectory = string.Empty;
             TargetDirectory = string.Empty;
             TargetName = string.Empty;
+            IgnorePattern = string.Empty;
         }
     }
 }
