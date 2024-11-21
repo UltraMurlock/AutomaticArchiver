@@ -10,7 +10,7 @@
     <Version>$(VersionPrefix)</Version>
     <Authors>UltraMurlock</Authors>
     <RepositoryUrl>https://github.com/UltraMurlock/AutomaticArchiver</RepositoryUrl>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <AssemblyVersion>1.2.0</AssemblyVersion>
     <Copyright>$(Authors)</Copyright>
   </PropertyGroup>
 
