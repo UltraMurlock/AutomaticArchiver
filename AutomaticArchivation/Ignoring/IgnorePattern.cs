@@ -29,6 +29,18 @@ namespace AutomaticArchivation.Ignoring
 			get => new IgnorePattern() { Name = "Empty" };
 		}
 
+		public static IgnorePattern VisualStudioCSharp
+		{
+			get => new IgnorePattern()
+			{
+				Name = "VisualStudioC#",
+				StringPatterns = [
+					"^[Bb]in$/",
+					"^[Oo]bj$/",
+					"^.vs$/"]
+			};
+		}
+
 
 
 		public bool IsMatch(FileInfo file)

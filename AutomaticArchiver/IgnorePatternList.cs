@@ -20,19 +20,10 @@ namespace AutomaticArchiver
 		{
 			get
 			{
-				IgnorePattern ignorePattern = new IgnorePattern()
+				return new IgnorePatternList()
 				{
-					Name = "Template",
-					StringPatterns = new string[]
-					{
-						".*.ignore",
-						"testignore.txt",
-						"ignoredfolder/"
-					}
+					IgnorePatterns = [IgnorePattern.VisualStudioCSharp]
 				};
-				IgnorePatternList template = new IgnorePatternList();
-				template.IgnorePatterns = [ignorePattern];
-				return template;
 			}
 		}
 
