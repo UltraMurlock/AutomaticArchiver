@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomaticArchiver", "Automa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticArchivation", "AutomaticArchivation\AutomaticArchivation.csproj", "{62EB615B-0415-465E-8CA0-204FD84D064A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementations", "Implementations", "{79D964E5-217B-4A09-81E8-27E095CFBF7B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomaticArchiver.ConsoleApp", "Implementations\AutomaticArchiver.ConsoleApp\AutomaticArchiver.ConsoleApp.csproj", "{05FCF9B2-98A0-435C-A43F-B33731733AC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,9 +25,16 @@ Global
 		{62EB615B-0415-465E-8CA0-204FD84D064A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62EB615B-0415-465E-8CA0-204FD84D064A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62EB615B-0415-465E-8CA0-204FD84D064A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05FCF9B2-98A0-435C-A43F-B33731733AC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05FCF9B2-98A0-435C-A43F-B33731733AC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05FCF9B2-98A0-435C-A43F-B33731733AC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05FCF9B2-98A0-435C-A43F-B33731733AC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{05FCF9B2-98A0-435C-A43F-B33731733AC5} = {79D964E5-217B-4A09-81E8-27E095CFBF7B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD228546-D631-4608-A33C-12C10A511A61}
