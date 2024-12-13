@@ -5,7 +5,12 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>Assets\icon-light.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\icon-light.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\AutomaticArchivation\AutomaticArchivation.csproj" />
